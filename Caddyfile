@@ -1,0 +1,8 @@
+# Plain HTTP on port 80 inside the container. To have Caddy fetch a
+# certificate itself, replace ":80" with your hostname and publish 443.
+:80 {
+	root * /srv
+	encode zstd gzip
+	header Cache-Control "no-cache"
+	file_server
+}

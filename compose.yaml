@@ -1,0 +1,12 @@
+# Works with `docker compose`, `podman compose` / `podman-compose`, and
+# compose-based managers such as Dockge or Portainer.
+services:
+  switch-map:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: localhost/switch-map:latest
+    container_name: switch-map
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8080}:80"

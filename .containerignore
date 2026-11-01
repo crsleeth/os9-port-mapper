@@ -1,0 +1,6 @@
+.git
+.claude
+dist
+test
+tools
+*.switchmap.json
