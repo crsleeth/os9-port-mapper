@@ -7,6 +7,6 @@ services:
       dockerfile: Containerfile
     image: localhost/switch-map:latest
     container_name: switch-map
-    restart: unless-stopped
+    restart: always
     ports:
       - "${PORT:-8080}:80"
