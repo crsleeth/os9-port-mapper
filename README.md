@@ -1,7 +1,5 @@
 # Switch Map
 
-Status: working; OS9 import checked against S4048-ON output (OS9 9.14) | Next: try more switch models and OS9 versions
-
 A small web app for documenting switch ports. Lay out a switch's front panel
 (for example `48x 10Gb SFP+, 6x 40Gb QSFP+`), then record per port: description,
 what it connects to, mode, VLANs, IP, port-channel, link state, and the devices
