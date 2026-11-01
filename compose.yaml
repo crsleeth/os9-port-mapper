@@ -1,12 +1,43 @@
+# Switch Map
+#
+# Runs the site in a stock Caddy container. Nothing is built: the site and the
+# Caddyfile are mounted in, so updating is "git pull" (restart the stack only
+# if compose.yaml or the Caddyfile changed).
+#
+# Settings go in a .env file next to this one (it is gitignored), so this
+# file never needs local edits. See .env.example.
+#
 # Works with `docker compose`, `podman compose` / `podman-compose`, and
 # compose-based managers such as Dockge or Portainer.
+
 services:
-  switch-map:
-    build:
-      context: .
-      dockerfile: Containerfile
-    image: localhost/switch-map:latest
-    container_name: switch-map
-    restart: always
+  web:
+    # Fully qualified so Podman doesn't stop to ask which registry to use.
+    image: docker.io/library/caddy:2-alpine
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./site:/srv:ro
+      - caddy_data:/data
+      - caddy_config:/config
     ports:
-      - "${PORT:-8080}:80"
+      # Set BIND_ADDRESS=127.0.0.1 to keep the port off the network
+      # (for example when the tunnel below is the only way in).
+      - "${BIND_ADDRESS:-0.0.0.0}:${PORT:-8080}:80"
+    restart: always
+
+  # Optional Cloudflare Tunnel. Starts only when .env sets
+  # COMPOSE_PROFILES=tunnel and TUNNEL_TOKEN. In the tunnel's public hostname,
+  # point the service at http://web:80.
+  tunnel:
+    profiles: ["tunnel"]
+    image: docker.io/cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:-}
+    depends_on:
+      - web
+    restart: always
+
+volumes:
+  caddy_data:
+  caddy_config:

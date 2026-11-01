@@ -1,8 +1,16 @@
-# Plain HTTP on port 80 inside the container. To have Caddy fetch a
-# certificate itself, replace ":80" with your hostname and publish 443.
+# Plain HTTP on port 80 inside the container. HTTPS comes from the Cloudflare
+# Tunnel or whatever reverse proxy sits in front.
 :80 {
 	root * /srv
 	encode zstd gzip
-	header Cache-Control "no-cache"
+
+	header {
+		# Revalidate on every load so a `git pull` shows up right away.
+		Cache-Control "no-cache"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+
 	file_server
 }

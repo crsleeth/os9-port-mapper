@@ -14,24 +14,59 @@ browser and in the files you save.
 ### Docker or Podman (compose)
 
 ```bash
-docker compose up -d --build
+docker compose up -d
 ```
 
 or
 
 ```bash
-podman compose up -d --build
+podman compose up -d
 ```
 
-Then open http://localhost:8080. Set `PORT` (in the environment or a `.env`
-file next to `compose.yaml`) to use another port.
+Then open http://localhost:8080. Podman has no always-running daemon, so to
+bring the container back after a reboot also run
+`systemctl enable --now podman-restart` (add `--user` for rootless).
 
-The image is the official Caddy image with `site/` copied in. After pulling new
-code, run the same command again to rebuild. If you already run a reverse
-proxy, point it at the published port.
+The stock Caddy image serves `site/` straight from this folder; nothing is
+built. Compose-based managers such as Dockge or Portainer can use
+`compose.yaml` as is: put this repository in the stack's directory and start
+the stack.
 
-Compose-based managers such as Dockge or Portainer can use `compose.yaml` as
-is: put this repository in the stack's directory and start the stack.
+### Configuration
+
+Settings go in a `.env` file next to `compose.yaml`. Copy `.env.example` to
+`.env` and change what you need; every setting is optional. `.env` is
+gitignored, so it never conflicts with an update.
+
+| Setting | Default | Purpose |
+| --- | --- | --- |
+| `PORT` | `8080` | Port published on the host |
+| `BIND_ADDRESS` | `0.0.0.0` | Host address for that port; `127.0.0.1` keeps it off the network |
+| `COMPOSE_PROFILES` | (unset) | Set to `tunnel` to start the Cloudflare Tunnel |
+| `TUNNEL_TOKEN` | (unset) | Token for the Cloudflare Tunnel |
+
+### Cloudflare Tunnel (optional)
+
+To publish the site without opening a port:
+
+1. In Cloudflare Zero Trust, go to Networks > Tunnels, create a tunnel and copy
+   its token.
+2. Add a public hostname to the tunnel with the service set to `http://web:80`.
+3. In `.env`, set `COMPOSE_PROFILES=tunnel` and `TUNNEL_TOKEN=<token>`, then run
+   `chmod 600 .env`.
+4. Run `docker compose up -d` again.
+
+With the tunnel as the only way in, also set `BIND_ADDRESS=127.0.0.1`.
+
+### Updating
+
+```bash
+git pull
+```
+
+The site is read straight from this folder, so changes show up on the next page
+load. If `compose.yaml` or `Caddyfile` changed, also run `docker compose up -d`
+(or `docker compose restart web`).
 
 ### Without containers
 
