@@ -1,5 +1,7 @@
 # Switch Map
 
+Live at https://os9.crsleeth.com
+
 A small web app for documenting switch ports. Lay out a switch's front panel
 (for example `48x 10Gb SFP+, 6x 40Gb QSFP+`), then record per port: description,
 what it connects to, mode, VLANs, IP, port-channel, link state, and the devices
