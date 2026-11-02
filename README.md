@@ -87,7 +87,10 @@ Then open http://localhost:8137. Any static file server works.
    uses `expect` (preinstalled on macOS; on Linux install the `expect` package).
    Log in as usual; once the `#` prompt appears it runs each show command,
    waiting for the prompt between them, then logs out.
-3. Copy the terminal output and paste it into the dialog.
+3. When it finishes, the output is already on the clipboard (macOS); paste it
+   into the dialog. Without `pbcopy` (Linux) it is saved to `~/os9-output.txt`
+   instead; choose that file or drop it on the dialog. Recording starts after
+   login, so the password is never written to the file.
 
 The commands are sent one at a time because OS9 discards input that arrives
 while a command is still printing, so pasting a block of show commands at the

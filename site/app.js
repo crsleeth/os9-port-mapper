@@ -811,16 +811,22 @@
     const layoutBox = h('input', { type: 'checkbox', onchange: e => { state.setLayout = e.target.checked; state.layoutTouched = true; update(); } });
     const applyBtn = h('button', { class: 'primary' }, 'Import');
     const text = h('textarea', { class: 'paste', spellcheck: false,
-      placeholder: 'Paste the terminal output here' });
+      placeholder: 'Paste the terminal output here, or drop a file' });
 
     // One line for a terminal on the visitor's own computer. It hands the
     // session to them until the # prompt appears, then sends each command
     // only after the previous one's prompt has come back.
     const loginOk = v => /^([\w.\-]+@)?[\w.\-:]+$/.test(v);
+    // Logging starts only after login, so the password never reaches the file.
+    // On macOS the file goes to the clipboard and is deleted; elsewhere it stays
+    // for "Choose a file".
+    const OUT = 'os9-output.txt';
     const sshLine = login => `expect -c 'set timeout 120; spawn ssh ${login}; ` +
       `interact -o -nobuffer -re {(^|[\\r\\n])[\\w.\\-]+#$} return; ` +
+      `log_file -noappend $env(HOME)/${OUT}; ` +
       `foreach c {${OS9_COMMANDS.map(c => `"${c}"`).join(' ')}} {send "$c\\r"; expect -re {[\\r\\n][\\w.\\-]+#$}}; ` +
-      `send "exit\\r"; expect eof'`;
+      `send "exit\\r"; expect eof'; ` +
+      `pbcopy < ~/${OUT} 2>/dev/null && rm ~/${OUT} && echo "Copied to the clipboard." || echo "Saved to ~/${OUT}"`;
     const cmds = h('pre', { class: 'mono' });
     const copyBtn = copyButton('Copy command', () => sshLine(sshLogin) + '\n', cmds);
     const drawCmd = () => {
@@ -873,6 +879,14 @@
       preview.replaceChildren(...lines.map(l => h('div', {}, l)));
     };
     text.addEventListener('input', update);
+    text.addEventListener('dragover', e => { if (e.dataTransfer.types.includes('Files')) e.preventDefault(); });
+    text.addEventListener('drop', async e => {
+      const f = e.dataTransfer.files[0];
+      if (!f) return;
+      e.preventDefault();
+      text.value = await f.text();
+      update();
+    });
 
     const file = h('input', { type: 'file', accept: '.txt,.log,.cfg,.conf,text/plain', hidden: true,
       onchange: async e => {
@@ -909,7 +923,9 @@
           h('div', { class: 'cmd-block' }, cmds, copyBtn),
           'Log in as usual. If you land at a ', h('code', {}, '>'), ' prompt, type ', h('code', {}, 'enable'),
           '. Once the ', h('code', {}, '#'), ' prompt appears it runs each show command in turn and logs out.'),
-        h('li', {}, 'Select all of the terminal output, copy it, and paste it below.')),
+        h('li', {}, 'When it says ', h('em', {}, 'Copied to the clipboard'), ', paste below. ',
+          'On Linux the output is saved to ', h('code', {}, '~/' + OUT), ' instead: use ', h('em', {}, 'Choose a file'),
+          ' or drop the file on the box below.')),
       h('details', { class: 'manual' },
         h('summary', {}, 'On Windows, PuTTY or a serial console? Run the commands by hand'),
         h('p', {}, 'At the ', h('code', {}, '#'), ' prompt, paste one command, wait for the prompt to come back, then paste the next. The switch drops anything it receives while it is still printing, so pasting them all at once loses commands.'),
